@@ -1,6 +1,12 @@
 from scapy.all import sniff
 from scapy.layers.inet import IP, TCP, UDP, ICMP
 
+from detector import (
+    check_large_packet,
+    check_suspicious_port,
+    count_packets,
+    check_port_scan
+)
 # Dictionary of common services
 COMMON_PORTS = {
     20: "FTP Data",
@@ -29,6 +35,9 @@ def packet_callback(packet):
     if packet.haslayer(IP):
         ip = packet[IP]
 
+        count_packets(ip.src)
+        check_large_packet(packet)
+
         print(f"Source IP       : {ip.src}")
         print(f"Destination IP  : {ip.dst}")
 
@@ -40,6 +49,8 @@ def packet_callback(packet):
             print("Protocol        : TCP")
             print(f"Source Port     : {tcp.sport}")
             print(f"Destination Port: {tcp.dport}")
+            check_suspicious_port(tcp.dport, ip.src)
+            check_port_scan(ip.src, tcp.dport)
 
             service = get_service(tcp.dport)
             print(f"Service         : {service}")
@@ -50,6 +61,8 @@ def packet_callback(packet):
             print("Protocol        : UDP")
             print(f"Source Port     : {udp.sport}")
             print(f"Destination Port: {udp.dport}")
+            check_suspicious_port(udp.dport, ip.src)
+            check_port_scan(ip.src, udp.dport)
 
             service = get_service(udp.dport)
             print(f"Service         : {service}")
