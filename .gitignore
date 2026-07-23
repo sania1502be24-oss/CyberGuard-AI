@@ -14,3 +14,7 @@ __pycache__/
 # OS Files
 Thumbs.db
 .DS_Store
+
+# Log files
+alerts.log
+packet_capture/alerts.log

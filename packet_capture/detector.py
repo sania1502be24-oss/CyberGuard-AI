@@ -1,6 +1,6 @@
 from colorama import Fore, Style, init
-
-init()
+from logger import log_alert
+init(autoreset=True)
 
 # Suspicious ports
 SUSPICIOUS_PORTS = {
@@ -16,6 +16,9 @@ packet_count = {}
 # Port scan tracker
 scan_tracker = {}
 
+# ICMP tracker
+icmp_tracker = {}
+
 
 # Detect large packets
 def check_large_packet(packet):
@@ -24,7 +27,9 @@ def check_large_packet(packet):
         print(
             Fore.YELLOW +
             f"[WARNING] Large Packet Detected: {len(packet)} bytes"
-            + Style.RESET_ALL
+        )
+        log_alert(
+            f"Large Packet Detected | Size: {len(packet)} bytes"
         )
 
 
@@ -36,15 +41,17 @@ def check_suspicious_port(port, ip):
         print(
             Fore.RED +
             "\n[ALERT] Suspicious Port Detected!"
-            + Style.RESET_ALL
         )
 
-        print("IP:", ip)
-        print("Port:", port)
-        print("Reason:", SUSPICIOUS_PORTS[port])
+        print(f"IP     : {ip}")
+        print(f"Port   : {port}")
+        print(f"Reason : {SUSPICIOUS_PORTS[port]}")
+        log_alert(
+    f"Suspicious Port | IP: {ip} | Port: {port} | Reason: {SUSPICIOUS_PORTS[port]}"
+)
 
 
-# Count packets from IP
+# Count packets from each IP
 def count_packets(ip):
 
     if ip not in packet_count:
@@ -55,11 +62,10 @@ def count_packets(ip):
     print(
         Fore.GREEN +
         f"[INFO] {ip} packets: {packet_count[ip]}"
-        + Style.RESET_ALL
     )
 
 
-# Detect port scanning
+# Detect Port Scanning
 def check_port_scan(ip, port):
 
     if ip not in scan_tracker:
@@ -72,5 +78,24 @@ def check_port_scan(ip, port):
         print(
             Fore.RED +
             f"[ALERT] Possible Port Scan detected from {ip}"
-            + Style.RESET_ALL
+        )
+
+        log_alert(
+            f"Possible Port Scan | Source IP: {ip}"
+        )
+
+
+# Detect ICMP Flood
+def check_icmp_flood(ip):
+
+    if ip not in icmp_tracker:
+        icmp_tracker[ip] = 1
+    else:
+        icmp_tracker[ip] += 1
+
+    if icmp_tracker[ip] > 1:
+
+        print(
+            Fore.RED +
+            f"[ALERT] Possible ICMP Flood detected from {ip}"
         )

@@ -5,8 +5,10 @@ from detector import (
     check_large_packet,
     check_suspicious_port,
     count_packets,
-    check_port_scan
+    check_port_scan,
+    check_icmp_flood
 )
+
 # Dictionary of common services
 COMMON_PORTS = {
     20: "FTP Data",
@@ -25,6 +27,7 @@ COMMON_PORTS = {
     3389: "RDP",
 }
 
+
 def get_service(port):
     return COMMON_PORTS.get(port, "Unknown")
 
@@ -33,6 +36,7 @@ def packet_callback(packet):
     print("=" * 60)
 
     if packet.haslayer(IP):
+
         ip = packet[IP]
 
         count_packets(ip.src)
@@ -44,11 +48,13 @@ def packet_callback(packet):
         service = "Unknown"
 
         if packet.haslayer(TCP):
+
             tcp = packet[TCP]
 
             print("Protocol        : TCP")
             print(f"Source Port     : {tcp.sport}")
             print(f"Destination Port: {tcp.dport}")
+
             check_suspicious_port(tcp.dport, ip.src)
             check_port_scan(ip.src, tcp.dport)
 
@@ -56,11 +62,13 @@ def packet_callback(packet):
             print(f"Service         : {service}")
 
         elif packet.haslayer(UDP):
+
             udp = packet[UDP]
 
             print("Protocol        : UDP")
             print(f"Source Port     : {udp.sport}")
             print(f"Destination Port: {udp.dport}")
+
             check_suspicious_port(udp.dport, ip.src)
             check_port_scan(ip.src, udp.dport)
 
@@ -68,7 +76,11 @@ def packet_callback(packet):
             print(f"Service         : {service}")
 
         elif packet.haslayer(ICMP):
+
             print("Protocol        : ICMP")
+
+            check_icmp_flood(ip.src)
+
             service = "ICMP"
 
         print("\nDetection Result:")
@@ -95,8 +107,9 @@ def packet_callback(packet):
 
     print("=" * 60)
 
+
 print("CyberGuard-AI Packet Analyzer Started...\n")
 
-sniff(prn=packet_callback, count=10)
+sniff(prn=packet_callback, count=30)
 
 print("\nCapture Finished!")
